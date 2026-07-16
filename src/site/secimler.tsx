@@ -3,6 +3,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { tr, trn } from "@/lib/format"
 import { href, go } from "@/lib/route"
 import { PageHead, SectionHead } from "@/site/shell"
+import { TileMap } from "@/site/tile-map"
+import { ilTiles, MAP_COUNTS } from "@/site/map-data"
 import { PARTIES, SECIM_LIST, geoChildren, geoById, type Unit } from "@/data/sample"
 
 /* The results browser template: pick an election, walk Türkiye to il to
@@ -144,6 +146,22 @@ export default function Secimler({ params }: { params: URLSearchParams }) {
         ) : null}
         {mah ? <>{" › "}<span className="lbl">{mah.name}</span></> : null}
       </p>
+
+      {!unit ? (
+        <div className="mt-4">
+          <Figure
+            finding={`${PARTIES[MAP_COUNTS.top].name} ${trn(MAP_COUNTS.lead[MAP_COUNTS.top])} ilde önde; yarış ${trn(MAP_COUNTS.contested)} ilde 2,5 puandan yakın.`}
+            dek="Kutu harita: her kutu bir il, alan eşit, komşuluk yaklaşık. Kutuya tıklayınca il açılır."
+            howToRead="her kutu bir il, rakam plakadır; renk önde olan partinin rengidir, koyu kutu 2,5 puandan yakın yarıştır."
+            source={KAYNAK_SECIM}
+          >
+            <TileMap
+              tiles={ilTiles((id) => href("secimler", { secim, il: id }))}
+              ariaLabel="il il önde olan parti, kutu harita"
+            />
+          </Figure>
+        </div>
+      ) : null}
 
       <div className="mt-6 grid gap-x-10 md:grid-cols-2">
         <Figure

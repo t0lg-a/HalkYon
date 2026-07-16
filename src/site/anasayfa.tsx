@@ -1,37 +1,76 @@
-import { Figure, Ladder, Band, Spine, AgateColumns } from "@/components/theo"
+import { Figure, Band } from "@/components/theo"
 import { Button } from "@/components/ui/button"
 import { tr, trn } from "@/lib/format"
 import { href, go } from "@/lib/route"
-import { PageHead, SectionHead } from "@/site/shell"
+import { SectionHead } from "@/site/shell"
+import { TileMap } from "@/site/tile-map"
+import { ilTiles, MAP_COUNTS } from "@/site/map-data"
 import {
-  PARTIES, CANDIDATES, SEAT_PROJ, MAJORITY, SEATS_TOTAL, TREND, BASELINE,
-  geoChildren, ARTICLES, CB, KAYNAK,
+  PARTIES, CANDIDATES, POLLS, SEATS_TOTAL, IL_TILES, DRAWS, ARSIV,
+  ARTICLES, CB, KAYNAK,
 } from "@/data/sample"
 
-/* The front page: a little of everything, every number invented. */
+/* The front door. One claim, one band, the board of numbers, the map,
+   and four doors into the desk. Everything on it is invented. */
 
-const ILLER = geoChildren()
-const gapOf = (shares: number[]) => {
-  const s = [...shares.slice(0, 6)].sort((a, b) => b - a)
-  return s[0] - s[1]
-}
-const NEAR = ILLER.filter((u) => gapOf(u.shares) < 2.5).length
+const GAP = POLLS[0].shares[0] - POLLS[0].shares[1]
+
+const STATS: [string, string][] = [
+  [trn(SEATS_TOTAL), "koltuk, çoğunluk 301"],
+  [trn(IL_TILES.length), "il kutu haritada"],
+  [trn(DRAWS.length), "model çekilişi"],
+  [trn(ARSIV.length), "arşiv seçimi, 1950'den beri"],
+]
+
+const DOORS: { key: string; kicker: string; title: string; dek: string }[] = [
+  {
+    key: "projeksiyon",
+    kicker: "projeksiyon",
+    title: "Hiçbir parti 301'i tek başına garantilemiyor.",
+    dek: "Meclis ve cumhurbaşkanlığı için temsili aralıklar.",
+  },
+  {
+    key: "anketler",
+    kicker: "anketler",
+    title: `Fark son ankette ${tr(GAP)} puan.`,
+    dek: "Toplayıcı, eğilim ve 1950'den beri arşiv rafı.",
+  },
+  {
+    key: "secimler",
+    kicker: "seçimler",
+    title: "Kayıt mahalleye kadar iniyor.",
+    dek: "81 il, ilçe ve mahalle düzeyinde temsili sonuç.",
+  },
+  {
+    key: "simulator",
+    kicker: "simülatör",
+    title: "Salınımı sen ayarla; 600 koltuk yeniden dağılır.",
+    dek: "Tekdüze salınım, bölge içi D'Hondt, canlı hesap.",
+  },
+]
 
 export default function Anasayfa() {
-  const trendA = TREND[0][TREND[0].length - 1].value - BASELINE[0]
   return (
     <>
-      <PageHead
-        kicker="türkiye'nin seçim masası · bütün veriler sentetik"
-        title={`${CANDIDATES[0].name} çizginin ${tr(CB.a - 50)} puan üstünde; yarış hâlâ açık.`}
+      <p className="lbl-m mt-9">halkyön · türkiye'nin seçim masası · temsili şablon</p>
+      <h1
+        className="mt-3 font-black"
+        style={{ fontSize: "clamp(2.5rem,7.4vw,4.9rem)", lineHeight: 0.96, letterSpacing: "-.045em", maxWidth: "17ch" }}
       >
-        Projeksiyon, anket toplayıcısı, sonuç tarayıcısı ve simülatör tek masada.{" "}
+        Sayım, tahmin ve arşiv. Tek masa.
+      </h1>
+      <p className="ser mt-4 max-w-[58ch]" style={{ fontSize: "1.125rem", lineHeight: 1.6, color: "var(--ink2)" }}>
+        Projeksiyon, anket toplayıcısı, il il sonuç tarayıcısı ve koltuk simülatörü.{" "}
         <b style={{ fontWeight: 600, color: "var(--ink)" }}>
-          Bu sayfa bir şablondur; her rakam temsilidir ve hiçbir seçimin kaydı değildir.
+          Bu sürüm bir şablondur; her rakam temsilidir ve hiçbir seçimin kaydı değildir.
         </b>
-      </PageHead>
+      </p>
+      <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <Button className="btn-lg" onClick={() => go("simulator")}>simülatörü aç</Button>
+        <a href={href("projeksiyon")} className="lbl underline underline-offset-2">projeksiyonu gör ›</a>
+      </div>
 
-      <div className="mt-7 flex flex-wrap items-end justify-between gap-x-7 gap-y-5 border-t border-t-ink pt-4">
+      <div className="mt-10 flex flex-wrap items-end justify-between gap-x-7 gap-y-5 border-t border-t-ink pt-4">
         <div>
           <span className="lbl-m">temsili pay, geçerli oy</span>
           <div className="fig font-black" style={{ fontSize: "clamp(3.4rem,10vw,7.5rem)", lineHeight: 0.82, letterSpacing: "-.055em" }}>
@@ -53,64 +92,49 @@ export default function Anasayfa() {
         </div>
       </div>
 
-      <div className="mt-10 grid gap-x-10 md:grid-cols-2">
-        <div>
-          <Figure
-            finding={`Medyan senaryoda en büyük parti çoğunluğun ${trn(MAJORITY - SEAT_PROJ[0].md)} koltuk altında.`}
-            dek={`${trn(SEATS_TOTAL)} koltuk; çoğunluk için ${trn(MAJORITY)}. Temsili model.`}
-            howToRead="her satır bir partinin medyan koltuğu; dik çizgi 301 çoğunluk çizgisidir."
-            source={KAYNAK}
-          >
-            <Ladder
-              rows={PARTIES.map((p, i) => ({ label: p.name, value: SEAT_PROJ[i].md, ink: p.ink }))}
-              threshold={MAJORITY}
-              max={SEATS_TOTAL}
-              display={(v) => trn(v)}
-            />
-          </Figure>
-          <a href={href("projeksiyon")} className="lbl underline underline-offset-2">projeksiyonun tamamı ›</a>
-        </div>
-        <div>
-          <Figure
-            finding={`${PARTIES[0].name} temmuz ortalamasında tabanının ${tr(Math.abs(trendA))} puan ${trendA >= 0 ? "üstünde" : "altında"}.`}
-            dek="Yedi aylık anket ortalaması, temsili seri."
-            howToRead="çentikler taban çizgisinden sapar; çizgi birleştirilmez."
-            source={KAYNAK}
-          >
-            <Spine points={TREND[0]} baseline={BASELINE[0]} />
-          </Figure>
-          <a href={href("anketler")} className="lbl underline underline-offset-2">anket toplayıcısına git ›</a>
-        </div>
+      <div className="mt-10 grid grid-cols-2 gap-x-7 gap-y-6 md:grid-cols-4">
+        {STATS.map(([n, label]) => (
+          <div key={label} className="border-t border-t-ink pt-2">
+            <div className="fig font-black" style={{ fontSize: "clamp(1.9rem,3.6vw,2.5rem)", lineHeight: 0.95, letterSpacing: "-.04em" }}>
+              {n}
+            </div>
+            <span className="lbl-m mt-1 block">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-12">
+        <Figure
+          finding={`${PARTIES[MAP_COUNTS.top].name} ${trn(MAP_COUNTS.lead[MAP_COUNTS.top])} ilde önde; yarış ${trn(MAP_COUNTS.contested)} ilde 2,5 puandan yakın.`}
+          dek="Kutu harita: her kutu bir il, alan eşit, komşuluk yaklaşık. Kutuya tıklayınca il açılır."
+          howToRead="her kutu bir il, rakam plakadır; renk önde olan partinin rengidir, koyu kutu 2,5 puandan yakın yarıştır."
+          source={KAYNAK}
+        >
+          <TileMap
+            tiles={ilTiles((id) => href("secimler", { secim: "g2023", il: id }))}
+            ariaLabel="il il önde olan parti, kutu harita"
+          />
+        </Figure>
       </div>
 
       <section className="mt-12">
-        <SectionHead
-          title={`Fark ${trn(NEAR)} ilde 2,5 puanın altında.`}
-          aside="ters satır · fark 2,5 içinde"
-        />
-        <div className="pt-2.5">
-          <AgateColumns
-            rows={ILLER.slice(0, 8).map((u) => {
-              const s = [...u.shares.slice(0, 6)].sort((a, b) => b - a)
-              return { label: u.name, a: tr(s[0]), b: tr(s[1]) }
-            })}
-            mark={(r) => parseFloat(r.a.replace(",", ".")) - parseFloat((r.b ?? "0").replace(",", ".")) < 2.5}
-          />
-        </div>
-        <p className="t-src">
-          Temsili örnek birimler. Gerçek il adları yalnızca yapıdır; paylar sentetiktir.{" "}
-          <a href={href("secimler")} className="underline underline-offset-2">sonuç tarayıcısına git ›</a>
-        </p>
-      </section>
-
-      <section className="mt-12">
-        <SectionHead title="Salınımı sen ayarla: 600 koltuk yeniden hesaplanır." />
-        <p className="ser mt-3 max-w-[56ch]" style={{ fontSize: "1.0625rem", lineHeight: 1.62, color: "var(--ink2)" }}>
-          Simülatör, sentetik bir taban üzerinde tekdüze ulusal salınımı bölge bölge
-          D'Hondt ile koltuğa çevirir.
-        </p>
-        <div className="mt-4">
-          <Button className="btn-lg" onClick={() => go("simulator")}>simülatörü aç</Button>
+        <SectionHead title="Masanın dört aracı." aside="hepsi temsili veriyle" />
+        <div className="grid gap-x-10 md:grid-cols-2">
+          {DOORS.map((d) => (
+            <a key={d.key} href={href(d.key)} className="block border-b border-b-hair py-5">
+              <p className="lbl-m">{d.kicker}</p>
+              <span
+                className="mt-1 block font-black"
+                style={{ fontSize: "1.375rem", letterSpacing: "-.022em", lineHeight: 1.2 }}
+              >
+                {d.title}
+              </span>
+              <p className="ser mt-1.5" style={{ fontSize: "1rem", lineHeight: 1.5, color: "var(--ink2)" }}>
+                {d.dek}
+              </p>
+              <span className="lbl mt-2.5 inline-block underline underline-offset-2">gir ›</span>
+            </a>
+          ))}
         </div>
       </section>
 

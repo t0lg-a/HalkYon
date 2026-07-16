@@ -2,6 +2,8 @@ import { Figure, Ladder, Comb, Band, DataTable } from "@/components/theo"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { tr, trn } from "@/lib/format"
 import { PageHead } from "@/site/shell"
+import { TileMap } from "@/site/tile-map"
+import { ilTiles, MAP_COUNTS } from "@/site/map-data"
 import {
   PARTIES, CANDIDATES, SEAT_PROJ, VOTE_PROJ, DRAWS, DRAWS_OVER,
   CB, CB_DRAWS, CB_UNDER, MAJORITY, SEATS_TOTAL, THRESHOLD, BASELINE, KAYNAK,
@@ -84,6 +86,14 @@ export default function Projeksiyon() {
                 </div>
               </Figure>
             </div>
+            <Figure
+              finding={`Medyan senaryoda yarış ${trn(MAP_COUNTS.contested)} ilde 2,5 puandan yakın.`}
+              dek="En olası kazanan il il. Kutu harita: her kutu bir il, alan eşit, komşuluk yaklaşık."
+              howToRead="her kutu bir il, rakam plakadır; renk en olası kazananın rengidir, koyu kutu 2,5 puandan yakın yarıştır."
+              source={KAYNAK}
+            >
+              <TileMap tiles={ilTiles()} ariaLabel="il il en olası kazanan, kutu harita" />
+            </Figure>
           </TabsContent>
 
           <TabsContent value="cb" forceMount className="data-[state=inactive]:hidden">

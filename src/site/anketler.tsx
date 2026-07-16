@@ -2,8 +2,10 @@ import { Figure, Ladder, Spine, Pair, DataTable, Absent } from "@/components/the
 import { tr, trn } from "@/lib/format"
 import { href } from "@/lib/route"
 import { PageHead, SectionHead } from "@/site/shell"
+import { Scatter } from "@/site/scatter"
 import {
-  PARTIES, POLLS, TREND, BASELINE, THRESHOLD, ARSIV, ARSIV_SPECIMEN, KAYNAK,
+  PARTIES, POLLS, TREND, BASELINE, THRESHOLD, ARSIV, ARSIV_SPECIMEN,
+  SCATTER, SCATTER_MEAN, KAYNAK,
 } from "@/data/sample"
 
 /* The aggregator template: the running table, the trend, and the archive
@@ -107,6 +109,17 @@ export default function Anketler({ params }: { params: URLSearchParams }) {
               ])}
             />
           </div>
+        </Figure>
+      </div>
+
+      <div className="mt-4">
+        <Figure
+          finding="Örneklem küçüldükçe ölçülen fark açılıyor."
+          dek={`${trn(SCATTER.length)} temsili anket: örneklem büyüklüğüne karşı ilk iki parti arasındaki fark, puan.`}
+          howToRead="her nokta bir anket; sağa doğru örneklem büyür, yatay çizgi bütün noktaların ortalamasıdır."
+          source={KAYNAK}
+        >
+          <Scatter points={SCATTER} mean={SCATTER_MEAN} />
         </Figure>
       </div>
 

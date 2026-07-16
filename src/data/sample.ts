@@ -156,21 +156,62 @@ const jitter = (from: number[], sd: number): number[] => {
   return [...base.map((v) => (v / sum) * (100 - OTHERS)), OTHERS]
 }
 
-const IL_NAMES: [string, string, number][] = [
-  ["ist", "İstanbul", 10842117], ["ank", "Ankara", 4185029], ["izm", "İzmir", 3214972],
-  ["brs", "Bursa", 2276419], ["kny", "Konya", 1567234], ["adn", "Adana", 1621008],
-  ["gaz", "Gaziantep", 1330547], ["trb", "Trabzon", 622310], ["diy", "Diyarbakır", 1101876],
-  ["kys", "Kayseri", 1012443], ["sms", "Samsun", 1004189], ["hty", "Hatay", 1152736],
+/* The 81 il as a tile grid: plate, name, and an approximate cell on a
+   17 by 6 board. The board is the map (kutu harita): adjacency is kept
+   roughly, shape is surrendered, every unit gets equal area. */
+export const IL_TILES: [number, string, number, number][] = [
+  [39, "Kırklareli", 0, 0], [34, "İstanbul", 2, 0], [67, "Zonguldak", 4, 0],
+  [74, "Bartın", 5, 0], [37, "Kastamonu", 6, 0], [57, "Sinop", 7, 0],
+  [55, "Samsun", 8, 0], [52, "Ordu", 9, 0], [28, "Giresun", 10, 0],
+  [61, "Trabzon", 11, 0], [53, "Rize", 12, 0], [8, "Artvin", 13, 0], [75, "Ardahan", 14, 0],
+  [22, "Edirne", 0, 1], [59, "Tekirdağ", 1, 1], [77, "Yalova", 2, 1],
+  [41, "Kocaeli", 3, 1], [54, "Sakarya", 4, 1], [81, "Düzce", 5, 1],
+  [14, "Bolu", 6, 1], [78, "Karabük", 7, 1], [18, "Çankırı", 8, 1],
+  [19, "Çorum", 9, 1], [5, "Amasya", 10, 1], [60, "Tokat", 11, 1],
+  [29, "Gümüşhane", 12, 1], [69, "Bayburt", 13, 1], [25, "Erzurum", 14, 1],
+  [36, "Kars", 15, 1], [76, "Iğdır", 16, 1],
+  [17, "Çanakkale", 0, 2], [10, "Balıkesir", 1, 2], [16, "Bursa", 2, 2],
+  [11, "Bilecik", 3, 2], [26, "Eskişehir", 4, 2], [6, "Ankara", 6, 2],
+  [71, "Kırıkkale", 7, 2], [66, "Yozgat", 8, 2], [58, "Sivas", 10, 2],
+  [24, "Erzincan", 12, 2], [62, "Tunceli", 13, 2], [12, "Bingöl", 14, 2], [4, "Ağrı", 15, 2],
+  [35, "İzmir", 0, 3], [45, "Manisa", 1, 3], [43, "Kütahya", 2, 3],
+  [64, "Uşak", 3, 3], [3, "Afyonkarahisar", 4, 3], [40, "Kırşehir", 7, 3],
+  [50, "Nevşehir", 8, 3], [38, "Kayseri", 9, 3], [44, "Malatya", 11, 3],
+  [23, "Elazığ", 12, 3], [49, "Muş", 14, 3], [13, "Bitlis", 15, 3], [65, "Van", 16, 3],
+  [9, "Aydın", 0, 4], [20, "Denizli", 2, 4], [15, "Burdur", 3, 4],
+  [32, "Isparta", 4, 4], [42, "Konya", 6, 4], [68, "Aksaray", 7, 4],
+  [51, "Niğde", 8, 4], [46, "Kahramanmaraş", 10, 4], [2, "Adıyaman", 11, 4],
+  [21, "Diyarbakır", 12, 4], [72, "Batman", 13, 4], [56, "Siirt", 14, 4], [30, "Hakkari", 16, 4],
+  [48, "Muğla", 1, 5], [7, "Antalya", 3, 5], [70, "Karaman", 6, 5],
+  [33, "Mersin", 7, 5], [1, "Adana", 8, 5], [80, "Osmaniye", 9, 5],
+  [31, "Hatay", 10, 5], [27, "Gaziantep", 11, 5], [79, "Kilis", 12, 5],
+  [63, "Şanlıurfa", 13, 5], [47, "Mardin", 14, 5], [73, "Şırnak", 15, 5],
 ]
 
-const ILLER: Unit[] = IL_NAMES.map(([id, name, valid]) => ({
-  id, name, level: "il" as const, valid, shares: jitter([...BASELINE], 5),
-}))
+/* invented valid-vote weights; the twelve big desks keep their old figures */
+const VALID_OVERRIDE: Record<number, number> = {
+  34: 10842117, 6: 4185029, 35: 3214972, 16: 2276419, 42: 1567234, 1: 1621008,
+  27: 1330547, 61: 622310, 21: 1101876, 38: 1012443, 55: 1004189, 31: 1152736,
+}
+
+export const ilId = (plate: number) => (plate === 34 ? "ist" : `p${plate}`)
+
+const ILLER: Unit[] = [...IL_TILES]
+  .sort((a, b) => a[0] - b[0])
+  .map(([plate, name]) => ({
+    id: ilId(plate),
+    name,
+    level: "il" as const,
+    valid: VALID_OVERRIDE[plate] ?? Math.round(90000 + rGeo() * 820000),
+    shares: jitter([...BASELINE], 8),
+  }))
+
+export const unitByPlate = (plate: number): Unit => ILLER.find((u) => u.id === ilId(plate))!
 
 const ILCE_NAMES: [string, string, number][] = [
   ["kad", "Kadıköy", 391204], ["usk", "Üsküdar", 384117], ["bes", "Beşiktaş", 142530], ["fat", "Fatih", 296482],
 ]
-const IST = ILLER[0]
+const IST = ILLER.find((u) => u.id === "ist")!
 const ILCELER: Unit[] = ILCE_NAMES.map(([id, name, valid]) => ({
   id, name, level: "ilce" as const, parent: "ist", valid, shares: jitter(IST.shares.slice(0, 6), 4),
 }))
@@ -220,6 +261,18 @@ export const DISTRICTS: District[] = seatDraws.map((seats, i) => ({
     return [...base.map((v) => (v / sum) * (100 - OTHERS)), OTHERS]
   })(),
 }))
+
+/* ---- the poll scatter · sample size against the measured gap -------------- */
+
+/* small samples exaggerate the gap: noise scales with one over root n */
+const rSc = seeded(131)
+export const SCATTER: { n: number; gap: number }[] = Array.from({ length: 48 }, () => {
+  const n = Math.round((800 + rSc() * 2600) / 50) * 50
+  const gap = Math.max(0.2, BASELINE[0] - BASELINE[1] + gauss(rSc) * (92 / Math.sqrt(n)))
+  return { n, gap }
+})
+export const SCATTER_MEAN =
+  SCATTER.reduce((a, p) => a + p.gap, 0) / SCATTER.length
 
 /* ---- the writings · placeholder texts, never published analysis ---------- */
 

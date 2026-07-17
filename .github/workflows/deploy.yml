@@ -38,5 +38,10 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # switches the Pages site to workflow builds (creates it if absent),
+      # so a stale "deploy from a branch" setting cannot serve raw source
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - id: deployment
         uses: actions/deploy-pages@v4

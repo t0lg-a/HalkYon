@@ -2,7 +2,7 @@ name: deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/halkyon-website-template-06mtdi]
   workflow_dispatch:
 
 permissions:
@@ -31,12 +31,15 @@ jobs:
         with:
           path: dist
 
-  # no `environment:` block: the auto-created github-pages environment's
-  # branch policy predates this repo's main branch and rejects it; the
-  # deployment itself only needs the pages and id-token permissions
+  # the Pages API requires the environment declaration; note the
+  # environment's deployment-branch policy must admit every branch listed
+  # in the push trigger above
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/configure-pages@v5
         with:

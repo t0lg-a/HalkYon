@@ -2,7 +2,7 @@ name: deploy
 
 on:
   push:
-    branches: [main, claude/halkyon-website-template-06mtdi]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -31,15 +31,13 @@ jobs:
         with:
           path: dist
 
+  # no `environment:` block: the auto-created github-pages environment's
+  # branch policy predates this repo's main branch and rejects it; the
+  # deployment itself only needs the pages and id-token permissions
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # switches the Pages site to workflow builds (creates it if absent),
-      # so a stale "deploy from a branch" setting cannot serve raw source
       - uses: actions/configure-pages@v5
         with:
           enablement: true
